@@ -1,0 +1,235 @@
+<?xml version="1.0" encoding="utf-8"?>
+<LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    android:layout_width="match_parent"
+    android:layout_height="match_parent"
+    android:orientation="vertical" >
+
+    <TextView
+        android:id="@+id/textView1"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:text="@string/GPRMCtitle"
+        android:textAppearance="?android:attr/textAppearanceMedium" />
+
+    <TextView
+        android:id="@+id/tvGPRMCrawdata"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:text="@string/notAcquired" />
+
+    <TableLayout
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content" >
+
+        <TableRow
+            android:id="@+id/TableRow11"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content" >
+
+            <TextView
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:text="@string/time_utc" />
+
+            <TextView
+                android:id="@+id/tvGPRMC01"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:text="@string/notAcquired" />
+        </TableRow>
+
+        <TableRow
+            android:id="@+id/TableRow10"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content" >
+
+            <TextView
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:text="@string/GPRMCdataStatus" />
+
+            <TextView
+                android:id="@+id/tvGPRMC02"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:text="@string/notAcquired" />
+
+        </TableRow>
+
+        <TableRow
+            android:id="@+id/TableRow09"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content" >
+
+            <TextView
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:text="@string/latiude" />
+
+            <TextView
+                android:id="@+id/tvGPRMC03"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:text="@string/notAcquired" />
+        </TableRow>
+
+        <TableRow
+            android:id="@+id/TableRow08"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content" >
+
+            <TextView
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:text="@string/GPGGAlatitudePosition" />
+
+            <TextView
+                android:id="@+id/tvGPRMC04"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:text="@string/notAcquired" />
+
+        </TableRow>
+
+        <TableRow
+            android:id="@+id/TableRow07"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content" >
+
+            <TextView
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:text="@string/longitude" />
+
+            <TextView
+                android:id="@+id/tvGPRMC05"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:text="@string/notAcquired" />
+
+        </TableRow>
+
+        <TableRow
+            android:id="@+id/TableRow06"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content" >
+
+            <TextView
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:text="@string/GPGGAlongitudePosition" />
+
+            <TextView
+                android:id="@+id/tvGPRMC06"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:text="@string/notAcquired" />
+
+        </TableRow>
+
+        <TableRow
+            android:id="@+id/TableRow05"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content" >
+
+            <TextView
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:layout_marginRight="@dimen/marginRight"
+                android:text="@string/GPRMCspeed" />
+
+            <TextView
+                android:id="@+id/tvGPRMC07"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:text="@string/notAcquired" />
+        </TableRow>
+
+        <TableRow
+            android:id="@+id/TableRow04"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content" >
+
+            <TextView
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:text="@string/GPMRCtrueCourse" />
+
+            <TextView
+                android:id="@+id/tvGPRMC08"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:text="@string/notAcquired" />
+        </TableRow>
+
+        <TableRow
+            android:id="@+id/TableRow03"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content" >
+
+            <TextView
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:text="@string/GPRMCdateStamp" />
+
+            <TextView
+                android:id="@+id/tvGPRMC09"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:text="@string/notAcquired" />
+        </TableRow>
+
+        <TableRow
+            android:id="@+id/TableRow02"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content" >
+
+            <TextView
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:text="@string/GPRMCvariation" />
+
+            <TextView
+                android:id="@+id/tvGPRMC10"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:text="@string/notAcquired" />
+        </TableRow>
+
+        <TableRow
+            android:id="@+id/TableRow01"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content" >
+
+            <TextView
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:text="@string/GPRMCeastOrWest" />
+
+            <TextView
+                android:id="@+id/tvGPRMC11"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:text="@string/notAcquired" />
+        </TableRow>
+
+        <TableRow
+            android:id="@+id/tableRow1"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content" >
+
+            <TextView
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:text="@string/NMEAchecksum" />
+
+            <TextView
+                android:id="@+id/tvGPRMC12"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:text="@string/notAcquired" />
+        </TableRow>
+
+    </TableLayout>
+
+</LinearLayout>

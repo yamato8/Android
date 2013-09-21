@@ -1,0 +1,39 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+
+    <string name="prefProviderSelectKey">providerSelect</string>
+    <string name="prefProviderSelectTitle">プロバイダ選択基準</string>
+    <string name="prefAccuracyKey">accuracy</string>
+    <string name="prefAccuracyTitle">位置精度設定</string>
+    <string name="prefBearingAccuracyKey">bearingAccuracy</string>
+    <string name="prefBearingAccuracyTitle">ベアリング精度</string>
+    <string name="prefHorizontalAccuracyKey">horizontalAccuracy</string>
+    <string name="prefHorizontalAccuracyTitle">水平精度</string>
+    <string name="prefVerticalAccuracyKey">verticalAccuracy</string>
+    <string name="prefVerticalAccuracyTitle">垂直精度</string>
+    <string name="prefPowerRequirementKey">powerRequirement</string>
+    <string name="prefPowerRequirementTitle">電力要件</string>
+    <string name="prefSpeedAccuracyKey">speedAccuracy</string>
+    <string name="prefSpeedAccuracyTitle">速度精度</string>
+    <string name="prefCostAllowedKey">costAllowed</string>
+    <string name="prefCostAllowedTitle">コスト要件</string>
+    <string name="prefMinTimeKey">minTime</string>
+    <string name="prefMinTimeTitle">通知間隔・時間</string>
+    <string name="prefMinDistanceKey">minDistance</string>
+    <string name="prefMinDistanceTitle">通知間隔・距離</string>
+    <string name="prefProviderUse">利用する</string>
+    <string name="prefProviderDoNotUse">利用しない</string>
+    <string name="prefAccuracy_no_requirement">指定なし</string>
+    
+    <string name="prefAccuracy_low">低精度</string>
+    <string name="prefAccuracy_medium">中精度</string>
+    <string name="prefAccuracy_hight">高精度</string>
+    
+    <string name="prefPowerRequirement_low">低消費</string>
+    <string name="prefPowerRequirement_medium">中消費</string>
+    <string name="prefPowerRequirement_hight">高消費</string>
+    
+    <string name="prefCostAllowed_false">許可しない</string>
+    <string name="prefCostAllowed_true">許可する</string>
+
+</resources>

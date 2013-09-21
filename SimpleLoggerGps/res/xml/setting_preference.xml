@@ -1,0 +1,68 @@
+<?xml version="1.0" encoding="utf-8"?>
+<PreferenceScreen xmlns:android="http://schemas.android.com/apk/res/android" >
+
+    <CheckBoxPreference
+        android:key="@string/prefProviderSelectKey"
+        android:title="@string/prefProviderSelectTitle" />
+
+    <ListPreference
+        android:dependency="@string/prefProviderSelectKey"
+        android:dialogTitle="@string/prefProviderSelectTitle"
+        android:entries="@array/accuracy_entries"
+        android:entryValues="@array/accuracy_entries_value"
+        android:key="@string/prefAccuracyKey"
+        android:title="@string/prefAccuracyTitle" />
+    <ListPreference
+        android:dependency="@string/prefProviderSelectKey"
+        android:dialogTitle="@string/prefAccuracyTitle"
+        android:entries="@array/three_entries"
+        android:entryValues="@array/three_entries_value"
+        android:key="@string/prefBearingAccuracyKey"
+        android:title="@string/prefBearingAccuracyTitle" />
+    <ListPreference
+        android:dependency="@string/prefProviderSelectKey"
+        android:entries="@array/four_item_entries"
+        android:entryValues="@array/four_item_entries_value"
+        android:key="@string/prefHorizontalAccuracyKey"
+        android:title="@string/prefHorizontalAccuracyTitle" />
+    <ListPreference
+        android:dependency="@string/prefProviderSelectKey"
+        android:dialogTitle="@string/prefVerticalAccuracyTitle"
+        android:entries="@array/four_item_entries"
+        android:entryValues="@array/four_item_entries_value"
+        android:key="@string/prefVerticalAccuracyKey"
+        android:title="@string/prefVerticalAccuracyTitle" />
+    <ListPreference
+        android:dependency="@string/prefProviderSelectKey"
+        android:dialogTitle="@string/prefPowerRequirementTitle"
+        android:entries="@array/power_item_entries"
+        android:entryValues="@array/power_item_entries_value"
+        android:key="@string/prefPowerRequirementKey"
+        android:title="@string/prefPowerRequirementTitle" />
+    <ListPreference
+        android:dependency="@string/prefProviderSelectKey"
+        android:dialogTitle="@string/prefSpeedAccuracyTitle"
+        android:entries="@array/three_entries"
+        android:entryValues="@array/three_entries_value"
+        android:key="@string/prefSpeedAccuracyKey"
+        android:title="@string/prefSpeedAccuracyTitle" />
+    <ListPreference
+        android:dependency="@string/prefProviderSelectKey"
+        android:dialogTitle="@string/prefCostAllowedTitle"
+        android:entries="@array/cost_item_entries"
+        android:entryValues="@array/cost_item_entries_value"
+        android:key="@string/prefCostAllowedKey"
+        android:title="@string/prefCostAllowedTitle" />
+
+    <EditTextPreference
+        android:dialogTitle="@string/prefMinTimeTitle"
+        android:inputType="number"
+        android:key="@string/prefMinTimeKey"
+        android:title="@string/prefMinTimeTitle" />
+    <EditTextPreference
+        android:dialogTitle="@string/prefMinDistanceTitle"
+        android:inputType="number"
+        android:key="@string/prefMinDistanceKey"
+        android:title="@string/prefMinDistanceTitle" />
+
+</PreferenceScreen>
