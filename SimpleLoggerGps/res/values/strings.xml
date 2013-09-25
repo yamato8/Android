@@ -84,5 +84,8 @@
     <string name="buttonLog">ログ</string>
     <string name="title_activity_nmea">NmeaActivity</string>
     <string name="title_activity_setting_preference">SettingPreferenceActivity</string>
+    <string name="diaLogSpan">間　　隔</string>
+    <string name="diaLogTime">記録時間</string>
+    <string name="diaLogMinutu">分</string>
 
 </resources>

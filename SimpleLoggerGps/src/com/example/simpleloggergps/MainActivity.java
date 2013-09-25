@@ -8,8 +8,12 @@ import java.util.List;
 import java.util.Locale;
 
 import android.app.Activity;
+import android.app.AlertDialog;
+import android.app.PendingIntent;
 import android.content.Context;
+import android.content.DialogInterface;
 import android.content.Intent;
+import android.content.IntentFilter;
 import android.content.SharedPreferences.Editor;
 import android.location.Criteria;
 import android.location.GpsStatus.NmeaListener;
@@ -17,7 +21,9 @@ import android.location.Location;
 import android.location.LocationListener;
 import android.location.LocationManager;
 import android.os.Bundle;
+import android.os.Handler;
 import android.util.Log;
+import android.view.LayoutInflater;
 import android.view.Menu;
 import android.view.View;
 import android.widget.LinearLayout;
@@ -30,7 +36,8 @@ public class MainActivity extends Activity implements LocationListener,
 	private static final String ACTION_LOCATION_UPDATE = "com.android.practice.ACTION_LOCATION_UPDATE";
 	private LocationManager locationManager;
 	// private Myclass myclass;
-	private LocationUpdateReceiver receiv;
+	private ReceiveLocation receiv;
+	private Context contex;
 
 	@Override
 	protected void onCreate(Bundle savedInstanceState) {
@@ -39,8 +46,10 @@ public class MainActivity extends Activity implements LocationListener,
 
 		Log.d(TAG, "onCreate");
 		// myclass =new Myclass( getApplicationContext() );
+		
+		contex = getApplicationContext();
 
-		locationManager = (LocationManager) getSystemService(LOCATION_SERVICE);
+		locationManager = (LocationManager) getSystemService(LOCATION_SERVICE);//
 
 		Log.i(TAG, getPackageName() + "_preferences.xml");//
 
@@ -67,7 +76,7 @@ public class MainActivity extends Activity implements LocationListener,
 
 	protected void onResume() {
 		super.onResume();
-		Log.d(TAG, "onResume");
+		Log.d(TAG, "onResume 計測スタート");
 
 		// 位置取得要件を読み込む　Criteria　
 		// Criteria myCriteria = myclass.readPrefFile(criteria);
@@ -100,15 +109,54 @@ public class MainActivity extends Activity implements LocationListener,
 		//locationManager.requestLocationUpdates(LocationManager.GPS_PROVIDER, 1000, 0, this);
 		// locationManager.addNmeaListener(this);
 		
-	// 　プロバイダの状態を確認する
-		providerCheck();
-
+	// 　プロバイダの状態を確認する--------------------------------------------必要
+		//providerCheck();
+		
+		Criteria criteria = new Criteria();
+		//Accuracyを指定
+		criteria.setAccuracy(Criteria.ACCURACY_FINE);
+		//PowerRequirementを指定
+		criteria.setPowerRequirement(Criteria.POWER_HIGH);
+		//SpeedRequiredを指定
+		criteria.setSpeedRequired(false);
+		//AltitudeRequiredを指定
+		criteria.setAltitudeRequired(true);
+		//BearingRequiredを指定
+		criteria.setBearingRequired(false);
+		//CostAllowedを指定
+		criteria.setCostAllowed(false);
+		
+		criteria.setSpeedAccuracy( 1 );
+		
+		
+		IntentFilter filter = new IntentFilter();
+		filter.addAction(ACTION_LOCATION_UPDATE);
+		
+		MainActivity aaa = MainActivity.this;
+		
+		receiv = new ReceiveLocation( new Handler() ,aaa);
+		registerReceiver(receiv, filter);
+		
+		 //PendingIntentの生成
+		//Intent intent = new Intent(this, ReceiveLocation.class);
+		Intent intent = new Intent();
+		//intent.setAction(ACTION_LOCATION_UPDATE);
+		
+		  
+        PendingIntent pi = PendingIntent.getBroadcast(this, 0, intent, PendingIntent.FLAG_UPDATE_CURRENT);
+ 
+        //locationManager.requestLocationUpdates(1000, 0, criteria, pi);//aaxxx
+        
+        locationManager.requestLocationUpdates (LocationManager.NETWORK_PROVIDER, 1000, 0, pi);
+        
+        locationManager.requestLocationUpdates (LocationManager.GPS_PROVIDER, 1000, 0, pi);
+        locationManager.addNmeaListener(this);
 	}
 
 	@Override
 	protected void onPause() {
 		super.onPause();
-		Log.d(TAG, "onPause");
+		Log.d(TAG, "onPause 計測中止");
 
 		if (locationManager != null) {
 			locationManager.removeUpdates(this);
@@ -160,7 +208,7 @@ public class MainActivity extends Activity implements LocationListener,
 	public void onNmeaReceived(long timestamp, String nmea) {
 		// TODO 自動生成されたメソッド・スタブ
 
-		// Log.d("", nmea);//
+		Log.d("", nmea);//
 		nmea = nmea.trim();
 
 		// 区切り文字で分解
@@ -184,6 +232,7 @@ public class MainActivity extends Activity implements LocationListener,
 		nmeaList.add(checksum);
 
 		if (nmeaArray[0].equals("$GPGSV")) {
+			Log.d("$GPGSV", nmea);
 			printOutGPGSV(nmea, timestamp, nmeaList);
 		} else if (nmeaArray[0].equals("$GPGGA")) {
 			// Log.d("$GPGGA", nmea);
@@ -295,6 +344,9 @@ public class MainActivity extends Activity implements LocationListener,
 				// Log.i("getAllProviders", provider + "　無効");
 				providerStatus += provider + " : 無効\n";
 				// state = "無効";
+				if ( provider.equals("gps") ){
+					// GPS プロバイダが無効の場合 nmea を取得できないと表示する。
+				}
 			}
 		}
 		
@@ -396,6 +448,8 @@ public class MainActivity extends Activity implements LocationListener,
 	private void printOutGPGSV(String nmea, long timestamp,	ArrayList<String> nmeaList) {
 		// TODO 自動生成されたメソッド・スタブ
 
+		Log.i("", "ddddddddddddddddddddddddddd");
+		
 		// 時間変換
 		//String date = dataformat(timestamp);
 
@@ -769,6 +823,40 @@ public class MainActivity extends Activity implements LocationListener,
 			Log.i("buttonTest", "ボタン２が押された");
 			// Intent intent2 = new Intent(this, Pref.class);
 			// startActivity(intent2);
+			
+			  //レイアウトの呼び出し
+			  LayoutInflater factory = LayoutInflater.from(this);
+			  final View inputView = factory.inflate(R.layout.log_dialog, null);
+			
+			 // ダイアログのオブジェクト(dlg) 生成
+			  AlertDialog.Builder dlg = new AlertDialog.Builder(this);
+			  //AlertDialog.Builder dlg = new AlertDialog.Builder(new ContextThemeWrapper(this, R.style.AlertDialogCustom));
+			 
+			  // ダイアログにタイトルを指定
+			  dlg.setTitle("タイトル");
+			 
+			  // ダイアログにメッセージを指定
+			  dlg.setMessage("ダイアログのメッセージ");
+			 
+			  
+			//カスタムレイアウトの表示
+			  dlg.setView(inputView);
+			  
+			  // アラートダイアログのポジティブボタンがクリックされた時に呼び出されるコールバックリスナーを登録します
+			  dlg.setPositiveButton("Start", new DialogInterface.OnClickListener() {
+			   @Override
+			   public void onClick(DialogInterface dialog, int which) {
+				   // ログ保存用サービス開始
+				   Intent intent = new Intent( contex, LogService.class );
+				   startService(intent);
+			   }
+			  });
+
+			  // アラートダイアログのネガティブボタンがクリックされた時に呼び出されるコールバックリスナーを登録します
+			  dlg.setNegativeButton("Cancel", null);
+			 
+			  // ダイアログを表示
+			  dlg.show();
 			break;
 
 		}
