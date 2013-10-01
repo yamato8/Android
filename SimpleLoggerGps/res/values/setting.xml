@@ -5,6 +5,8 @@
     <string name="prefProviderSelectTitle">プロバイダ選択基準</string>
     <string name="prefAccuracyKey">accuracy</string>
     <string name="prefAccuracyTitle">位置精度設定</string>
+    <string name="prefBearingRequiredKey">bearingRequired</string>
+    <string name="prefBearingRequiredTitle">ベアリング要件</string>
     <string name="prefBearingAccuracyKey">bearingAccuracy</string>
     <string name="prefBearingAccuracyTitle">ベアリング精度</string>
     <string name="prefHorizontalAccuracyKey">horizontalAccuracy</string>
@@ -13,27 +15,59 @@
     <string name="prefVerticalAccuracyTitle">垂直精度</string>
     <string name="prefPowerRequirementKey">powerRequirement</string>
     <string name="prefPowerRequirementTitle">電力要件</string>
+    
+    <string name="prefAltitudeRequiredKey">altitudeRequired</string>
+    <string name="prefAltitudeRequiredTitle">標高要件</string>
+    
+    <string name="prefSpeedRequiredKey">speedRequired</string>
+    <string name="prefSpeedRequiredTitle">速度要件</string>
     <string name="prefSpeedAccuracyKey">speedAccuracy</string>
     <string name="prefSpeedAccuracyTitle">速度精度</string>
+    
     <string name="prefCostAllowedKey">costAllowed</string>
     <string name="prefCostAllowedTitle">コスト要件</string>
-    <string name="prefMinTimeKey">minTime</string>
-    <string name="prefMinTimeTitle">通知間隔・時間</string>
-    <string name="prefMinDistanceKey">minDistance</string>
-    <string name="prefMinDistanceTitle">通知間隔・距離</string>
+    
     <string name="prefProviderUse">利用する</string>
     <string name="prefProviderDoNotUse">利用しない</string>
     <string name="prefAccuracy_no_requirement">指定なし</string>
-    
     <string name="prefAccuracy_low">低精度</string>
     <string name="prefAccuracy_medium">中精度</string>
     <string name="prefAccuracy_hight">高精度</string>
-    
     <string name="prefPowerRequirement_low">低消費</string>
     <string name="prefPowerRequirement_medium">中消費</string>
     <string name="prefPowerRequirement_hight">高消費</string>
-    
     <string name="prefCostAllowed_false">許可しない</string>
     <string name="prefCostAllowed_true">許可する</string>
+    <string name="prefBearingRequired_true">取得する</string>
+    <string name="prefBearingRequired_false">取得しない</string>
+    
+    <string name="prefMinTimeKey">minTime</string>
+    <string name="prefMinTimeTitle">時間</string>
+    <string name="prefMinDistanceKey">minDistance</string>
+    <string name="prefMinDistanceTitle">距離</string>
+    <string name="prefSpan">通知間隔</string>
+    
+     <string name="saveDiaLogSaveItem">保存項目</string>
+     <string name="saveDiaLogPloviderTitle">プロバイダー保存の間隔はLocation更新時</string>
+    <string name="saveDiaLogGps">Gps</string>
+    <string name="saveDiaLogNetwork">Network</string>
+    <string name="saveDiaLogNMEA">NMEA</string>
+    <string name="saveDiaLogGPGSV">GPGSV</string>
+    <string name="saveDiaLogGPGSA">GPGSA</string>
+    <string name="saveDiaLogGPRMC">GPRMC</string>
+    <string name="saveDiaLogGPVTG">GPVTG</string>
+    <string name="saveDiaLogGPGGA">GPGGA</string>
+    
+    <string name="saveDiaLogSpan">保存間隔(NMEA)</string>
+    <string name="saveDiaLogTime">保存期間</string>
+    <string name="saveDiaLogStart">Start</string>
+    <string name="saveDiaLogCancel">Cancel</string>
+        
+<string-array name="savingTime">
+        <item >秒</item>
+        <item >分</item>
+        <item >時間</item>
+        <item >日</item>
+    </string-array>
 
 </resources>

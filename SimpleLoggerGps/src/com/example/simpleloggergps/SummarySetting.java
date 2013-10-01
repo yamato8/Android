@@ -12,12 +12,16 @@ public class SummarySetting {
 
 		// 　プロバイダ選択基準
 		CheckBoxPreference cbpProvider = (CheckBoxPreference) preferenceScreen.findPreference("providerSelect");
-		providerSummary(cbpProvider);
+		providerSummary(cbpProvider);//
 
 		// 位置精度設定
 		ListPreference lpAccuracy = (ListPreference) preferenceScreen.findPreference("accuracy");
 		accuracySummary(lpAccuracy);
 
+		// ベアリング要件
+		CheckBoxPreference lpBearingRequired = (CheckBoxPreference) preferenceScreen.findPreference("bearingRequired");
+		checkSummary(lpBearingRequired);
+		
 		// ベアリング精度設定
 		ListPreference lpBearingAccuracy = (ListPreference) preferenceScreen.findPreference("bearingAccuracy");
 		threeSummary(lpBearingAccuracy);
@@ -34,12 +38,20 @@ public class SummarySetting {
 		ListPreference lpPowerRequirement = (ListPreference) preferenceScreen.findPreference("powerRequirement");
 		powerRequirementSummary(lpPowerRequirement);
 
+		// 速度要件
+		CheckBoxPreference lpSpeedRequired = (CheckBoxPreference) preferenceScreen.findPreference("speedRequired");
+		checkSummary(lpSpeedRequired);
+		
 		// 速度要件の設定
 		ListPreference lpSpeedAccuracy = (ListPreference) preferenceScreen.findPreference("speedAccuracy");
 		threeSummary(lpSpeedAccuracy);
 
+		// 標高要件の設定
+		CheckBoxPreference lpAltitudeRequired = (CheckBoxPreference) preferenceScreen.findPreference("altitudeRequired");
+		checkSummary(lpAltitudeRequired);
+		
 		// コスト要件の設定
-		ListPreference lpCostAllowed = (ListPreference) preferenceScreen.findPreference("costAllowed");
+		CheckBoxPreference lpCostAllowed = (CheckBoxPreference) preferenceScreen.findPreference("costAllowed");
 		costAllowedSummary(lpCostAllowed);
 
 		// 通知間隔・時間の設定
@@ -51,16 +63,20 @@ public class SummarySetting {
 		etpMinDistance.setSummary(etpMinDistance.getText());
 	}
 
+
+
 	/*
 	 * 概要：コスト要件のサマリー
 	 */
-	private void costAllowedSummary(ListPreference lpCostAllowed ) {
+	private void costAllowedSummary(CheckBoxPreference lpCostAllowed ) {
 		// TODO 自動生成されたメソッド・スタブ
-		if ( lpCostAllowed.getValue().endsWith("0") ) {
-			lpCostAllowed.setSummary( R.string.prefCostAllowed_false );//許可しない
-		}else if( lpCostAllowed.getValue().endsWith("1") ){
-			lpCostAllowed.setSummary( R.string.prefCostAllowed_true );// 許可する
+		if ( lpCostAllowed.isChecked() ) {
+			lpCostAllowed.setSummary( R.string.prefCostAllowed_true );//許可しない
+		}else {
+			lpCostAllowed.setSummary( R.string.prefCostAllowed_false );// 許可する
 		}
+		
+		
 	}
 	
 	/*
@@ -89,6 +105,18 @@ public class SummarySetting {
 			cbpProvider.setSummary( R.string.prefProviderUse );
 		} else {
 			cbpProvider.setSummary( R.string.prefProviderDoNotUse );
+		}
+	}
+	
+	/*
+	 * 概要：チェックボックスのサマリー	ベアリング要件
+	 */
+	private void checkSummary(CheckBoxPreference lpBearingRequired) {
+		// TODO 自動生成されたメソッド・スタブ
+		if (lpBearingRequired.isChecked()) {
+			lpBearingRequired.setSummary( R.string.prefBearingRequired_true );
+		} else {
+			lpBearingRequired.setSummary( R.string.prefBearingRequired_false );
 		}
 	}
 

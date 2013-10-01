@@ -8,12 +8,11 @@ import java.util.List;
 import java.util.Locale;
 
 import android.app.Activity;
-import android.app.AlertDialog;
 import android.app.PendingIntent;
 import android.content.Context;
-import android.content.DialogInterface;
 import android.content.Intent;
 import android.content.IntentFilter;
+import android.content.SharedPreferences;
 import android.content.SharedPreferences.Editor;
 import android.location.Criteria;
 import android.location.GpsStatus.NmeaListener;
@@ -23,7 +22,6 @@ import android.location.LocationManager;
 import android.os.Bundle;
 import android.os.Handler;
 import android.util.Log;
-import android.view.LayoutInflater;
 import android.view.Menu;
 import android.view.View;
 import android.widget.LinearLayout;
@@ -38,10 +36,15 @@ public class MainActivity extends Activity implements LocationListener,
 	// private Myclass myclass;
 	private ReceiveLocation receiv;
 	private Context contex;
+	private int mode;
+	private Criteria criteria;
 
 	@Override
 	protected void onCreate(Bundle savedInstanceState) {
 		super.onCreate(savedInstanceState);
+		
+		//getWindow().requestFeature(Window.FEATURE_ACTION_BAR);//アクションパー
+		
 		setContentView(R.layout.activity_main);
 
 		Log.d(TAG, "onCreate");
@@ -51,35 +54,30 @@ public class MainActivity extends Activity implements LocationListener,
 
 		locationManager = (LocationManager) getSystemService(LOCATION_SERVICE);//
 
-		Log.i(TAG, getPackageName() + "_preferences.xml");//
-
+		String prefFileName = getApplicationContext().getFilesDir().getParentFile() + "/shared_prefs/" + getPackageName() + "_preferences.xml";// 設定ファイル
+		
 		// 設定ファイルがあるか確認する
-		File f = new File("/data/data/" + getPackageName() + "/shared_prefs/" + getPackageName() + "_preferences.xml");
-		if (f.exists()) {
-			Log.i("", "ファイルがある");
+		File prefFile = new File( prefFileName );
+		if (prefFile.exists()) {
+			//Log.i("", "ファイルがある");
 		} else {
-			Log.i("", "ファイルがない");
+			//Log.i("", "ファイルがない");
 			// ファイルがない場合の処理
-			noPrefFile();
-			// 　初期値を入力する
-
-			Log.d("Myclass", "Myclass　の　setting　が呼ばれた");
-
+			noPrefFile();// 　初期値を入力する
 		}
-
-		// IntentFilter filter = new IntentFilter( );
-		// filter.addAction(ACTION_LOCATION_UPDATE);
-
-		// receiv = new LocationUpdateReceiver( MainActivity.this);
-		// registerReceiver(receiv, filter);
+		
+		prefFile = null;
+	
 	}
+
+
 
 	protected void onResume() {
 		super.onResume();
 		Log.d(TAG, "onResume 計測スタート");
-
-		// 位置取得要件を読み込む　Criteria　
-		// Criteria myCriteria = myclass.readPrefFile(criteria);
+		
+		Initialize();//初期化する
+		
 
 		// 更新間隔の設定値を調べる
 		// long miniTime = myclass.timeSpan();
@@ -87,49 +85,12 @@ public class MainActivity extends Activity implements LocationListener,
 
 		// Log.d(TAG, "" + miniTime + "::" + minDistance );//
 
-		// PendingIntentの生成
-		// Intent nextIntent = new Intent(this, ReceiveLocation.class);
-		// PendingIntent pi = PendingIntent.getBroadcast(this, 0x432f,
-		// nextIntent,PendingIntent.FLAG_UPDATE_CURRENT);
-
-		// locationManager.requestLocationUpdates( miniTime, minDistance,
-		// myCriteria, pi);
-
-		// Intent intent = new Intent();
-		// intent.setAction(ACTION_LOCATION_UPDATE);
-
-		// PendingIntent pendingIntent =
-		// PendingIntent.getBroadcast(getApplicationContext(), 0, intent,
-		// PendingIntent.FLAG_UPDATE_CURRENT);
-
-		// locationManager.requestLocationUpdates(miniTime, minDistance,
-		// myCriteria,pendingIntent );
-
-		//locationManager.requestLocationUpdates(LocationManager.NETWORK_PROVIDER, 1000, 0, this);
-		//locationManager.requestLocationUpdates(LocationManager.GPS_PROVIDER, 1000, 0, this);
-		// locationManager.addNmeaListener(this);
 		
 	// 　プロバイダの状態を確認する--------------------------------------------必要
 		//providerCheck();
 		
-		Criteria criteria = new Criteria();
-		//Accuracyを指定
-		criteria.setAccuracy(Criteria.ACCURACY_FINE);
-		//PowerRequirementを指定
-		criteria.setPowerRequirement(Criteria.POWER_HIGH);
-		//SpeedRequiredを指定
-		criteria.setSpeedRequired(false);
-		//AltitudeRequiredを指定
-		criteria.setAltitudeRequired(true);
-		//BearingRequiredを指定
-		criteria.setBearingRequired(false);
-		//CostAllowedを指定
-		criteria.setCostAllowed(false);
 		
-		criteria.setSpeedAccuracy( 1 );
-		
-		
-		IntentFilter filter = new IntentFilter();
+/*		IntentFilter filter = new IntentFilter();
 		filter.addAction(ACTION_LOCATION_UPDATE);
 		
 		MainActivity aaa = MainActivity.this;
@@ -142,16 +103,17 @@ public class MainActivity extends Activity implements LocationListener,
 		Intent intent = new Intent();
 		//intent.setAction(ACTION_LOCATION_UPDATE);
 		
-		  
+		
         PendingIntent pi = PendingIntent.getBroadcast(this, 0, intent, PendingIntent.FLAG_UPDATE_CURRENT);
- 
+
         //locationManager.requestLocationUpdates(1000, 0, criteria, pi);//aaxxx
         
         locationManager.requestLocationUpdates (LocationManager.NETWORK_PROVIDER, 1000, 0, pi);
-        
-        locationManager.requestLocationUpdates (LocationManager.GPS_PROVIDER, 1000, 0, pi);
-        locationManager.addNmeaListener(this);
+  */       
+        //locationManager.requestLocationUpdates (LocationManager.GPS_PROVIDER, 1000, 0,this);//
+        //locationManager.addNmeaListener(this);
 	}
+
 
 	@Override
 	protected void onPause() {
@@ -263,6 +225,93 @@ public class MainActivity extends Activity implements LocationListener,
 
 	// ---------------- 以下　自作メソッド ----------------
 	/*
+	 * 概要：初期化する
+	 */
+	private void Initialize() {
+		// TODO 自動生成されたメソッド・スタブ
+		
+		// プロバイダ取得要件を利用するか調べる
+		SharedPreferences pref  = getSharedPreferences("com.example.simpleloggergps_preferences", MODE_PRIVATE);
+		boolean providerSelect = pref.getBoolean("providerSelect", false);	
+
+		if (providerSelect) {
+			//プロバイダ取得要件を使う場合
+			mode = 1;
+
+			// 位置取得要件を読み込む　Criteria　
+			criteria = readPrefCriteria( new Criteria() );
+			mode1();
+		} else {
+			mode = 0;
+			providerCheck();
+		}
+		
+	}
+	private void mode1() {
+		// TODO 自動生成されたメソッド・スタブ
+		IntentFilter filter = new IntentFilter();
+		filter.addAction(ACTION_LOCATION_UPDATE);
+		
+		MainActivity aaa = MainActivity.this;
+		
+		receiv = new ReceiveLocation( new Handler() ,aaa);
+		registerReceiver(receiv, filter);
+		
+		 //PendingIntentの生成
+		//Intent intent = new Intent(this, ReceiveLocation.class);
+		Intent intent = new Intent();
+		//intent.setAction(ACTION_LOCATION_UPDATE);
+		
+		
+        PendingIntent pi = PendingIntent.getBroadcast(this, 0, intent, PendingIntent.FLAG_UPDATE_CURRENT);
+ 
+        //locationManager.requestLocationUpdates(1000, 0, criteria, pi);//aaxxx
+        
+        //locationManager.requestLocationUpdates (LocationManager.NETWORK_PROVIDER, 1000, 0, pi);
+        
+        //locationManager.requestLocationUpdates (LocationManager.GPS_PROVIDER, 1000, 0, pi);
+        locationManager.addNmeaListener(this);
+	}
+
+
+
+	/*
+	 * 概要：設定値を調べる
+	 */
+	private Criteria readPrefCriteria(Criteria criteria) {
+		// TODO 自動生成されたメソッド・スタブ
+		
+		SharedPreferences pref  = getSharedPreferences("com.example.simpleloggergps_preferences", MODE_PRIVATE);
+		
+		String accuracy = pref.getString("accuracy", "読み込みエラー");					// 位置精度
+		String horizontalAccuracy = pref.getString("horizontalAccuracy", "読み込みエラー");// 水平精度(緯経度)
+		String verticalAccuracy = pref.getString("verticalAccuracy", "読み込みエラー");	// 垂直精度(高度)
+		String bearingAccuracy = pref.getString("bearingAccuracy", "読み込みエラー");	// ベアリングの精度
+		String powerRequirement = pref.getString("powerRequirement", "読み込みエラー");	// 電力要件
+		String speedAccuracy = pref.getString("speedAccuracy", "読み込みエラー");			// 速度情報
+
+		boolean altitudeRequired = pref.getBoolean("altitudeRequired", false);		// 標高
+		boolean bearingRequired = pref.getBoolean("bearingRequired", false);		// ベアリング
+		boolean speedRequired = pref.getBoolean("speedRequired", false);			// スピード
+		boolean costAllowed = pref.getBoolean("costAllowed", false);				// 金銭コスト
+
+		criteria.setAccuracy( Integer.parseInt( accuracy ) );						// 緯経度取得の位置精度
+		criteria.setHorizontalAccuracy( Integer.parseInt( horizontalAccuracy ) );	// 水平精度(緯経度)
+		criteria.setVerticalAccuracy( Integer.parseInt( verticalAccuracy ) );		// 垂直精度(高度)
+		criteria.setPowerRequirement( Integer.parseInt( powerRequirement ) );		// 電力要件
+		
+		criteria.setBearingRequired( bearingRequired );						//ベアリングの情報を取得するか
+		criteria.setBearingAccuracy( Integer.parseInt( bearingAccuracy ) );	// ベアリングの精度
+		
+		criteria.setSpeedRequired( speedRequired );
+		criteria.setSpeedAccuracy( Integer.parseInt( speedAccuracy ) );
+		
+		criteria.setAltitudeRequired( altitudeRequired );	//標高の情報を取得するか
+		criteria.setCostAllowed( costAllowed );				//コスト要件
+		
+		return criteria;
+	}
+	/*
 	 * 設定ファイルが無かったら設定値を設定する
 	 */
 	private void noPrefFile() {
@@ -272,25 +321,24 @@ public class MainActivity extends Activity implements LocationListener,
 		// Log.i("", "精度 " + criteria.getAccuracy());
 
 		// 　設定ファイルに書き込み
+		prefWriteBoolean("providerSelect", false);// criteria を使うか
+		
 		prefWriteString("accuracy", String.valueOf(criteria.getAccuracy())); // 位置精度
-		prefWriteString("bearingAccuracy",
-				String.valueOf(criteria.getBearingAccuracy())); // ベアリングの精度
-		prefWriteString("horizontalAccuracy",
-				String.valueOf(criteria.getHorizontalAccuracy())); // 水平精度(緯経度)
-		prefWriteString("verticalAccuracy",
-				String.valueOf(criteria.getVerticalAccuracy())); // 垂直精度(高度)
-		prefWriteString("powerRequirement",
-				String.valueOf(criteria.getPowerRequirement())); // 電力要件
-		prefWriteString("speedAccuracy",
-				String.valueOf(criteria.getSpeedAccuracy())); // 速度情報
-		prefWriteString("costAllowed",
-				String.valueOf(criteria.isCostAllowed()));// 金銭コスト
-
+		prefWriteString("bearingAccuracy",String.valueOf(criteria.getBearingAccuracy())); // ベアリングの精度
+		
+		prefWriteString("horizontalAccuracy",String.valueOf(criteria.getHorizontalAccuracy())); // 水平精度(緯経度)
+		prefWriteString("verticalAccuracy",	String.valueOf(criteria.getVerticalAccuracy())); // 垂直精度(高度)
+		prefWriteString("powerRequirement",String.valueOf(criteria.getPowerRequirement())); // 電力要件
+		prefWriteString("speedAccuracy",String.valueOf(criteria.getSpeedAccuracy())); // 速度情報
+		
+		prefWriteBoolean("altitudeRequired", criteria.isAltitudeRequired());// 標高
+		prefWriteBoolean("bearingRequired", criteria.isBearingRequired());// ベアリング
+		prefWriteBoolean("costAllowed", criteria.isCostAllowed());// コスト
+		prefWriteBoolean("speedRequired", criteria.isSpeedRequired());// スピード
+		
 		prefWriteString("minTime", String.valueOf(1 * 60 * 1000));// 更新間隔　時間(1分)
-
 		prefWriteString("minDistance", String.valueOf(10));// 更新間隔　距離(10m)
 
-		prefWriteBoolean("providerSelect", false);// criteria を使うか
 
 		criteria = null;
 	}
@@ -361,30 +409,6 @@ public class MainActivity extends Activity implements LocationListener,
 	 */
 	private void printOutNetwork(Location location) {
 		// TODO 自動生成されたメソッド・スタブ
-/*		TextView tvNwtTime = (TextView) findViewById(R.id.tvNetTime);// 時間
-		TextView tvNetTimeConvert = (TextView) findViewById(R.id.tvNetTimeConvert);// 時間
-		TextView tvNwtLatitude = (TextView) findViewById(R.id.tvNetLatitude);// 緯度
-		TextView tvNwtLongitude = (TextView) findViewById(R.id.tvNetLongitude);// 経度
-		TextView tvNetAltitude = (TextView) findViewById(R.id.tvNetAltitude);// 標高
-		TextView tvNetSpeed = (TextView) findViewById(R.id.tvNetSpeed);// 速度
-		TextView tvNetAccuracy = (TextView) findViewById(R.id.tvNetAccuracy);// 精度
-		TextView tvNetBearing = (TextView) findViewById(R.id.tvNetBearing);// ベアリング
-		// TextView tvNetBundle = (TextView)
-		// findViewById(R.id.tvNetBundle);//バンドル
-
-		tvNwtLatitude.setText(String.valueOf(location.getLatitude()));
-		tvNwtLongitude.setText(String.valueOf(location.getLongitude()));
-		tvNetAltitude.setText(String.valueOf(location.getAltitude()));
-		tvNetSpeed.setText(String.valueOf(location.getSpeed()));
-		tvNetAccuracy.setText(String.valueOf(location.getAccuracy()));
-		tvNetBearing.setText(String.valueOf(location.getBearing()));
-		// tvNetBundle.setText( String.valueOf(location.getExtras()) );
-
-		// 時間変換
-		String date = dataformat(location.getTime());
-
-		tvNwtTime.setText(String.valueOf(location.getTime()));
-		tvNetTimeConvert.setText(date);*/
 		
 		((TextView) getWindow().getDecorView().findViewById(R.id.tvNetTime)).setText( String.valueOf(location.getTime()) );// 時間
 		((TextView) getWindow().getDecorView().findViewById(R.id.tvNetTimeConvert)).setText( dataformat(location.getTime()) );// 時間　変換値
@@ -402,32 +426,6 @@ public class MainActivity extends Activity implements LocationListener,
 	 */
 	private void printOutGps(Location location) {
 		// TODO 自動生成されたメソッド・スタブ
-		//TextView tvGpsTime = (TextView) findViewById(R.id.tvGpsTime);// 時間
-		//TextView tvGpsTimeConvert = (TextView) findViewById(R.id.tvGpsTimeConvert);// 時間
-		
-		//TextView tvGpsLatitude = (TextView) findViewById(R.id.tvGpsLatitude);// 緯度
-		//TextView tvGpsLongitude = (TextView) findViewById(R.id.tvGpsLongitude);// 経度
-		//TextView tvGpsAltitude = (TextView) findViewById(R.id.tvGpsAltitude);// 標高
-		//TextView tvGpsSpeed = (TextView) findViewById(R.id.tvGpsSpeed);// 速度
-		//TextView tvGpsAccuracy = (TextView) findViewById(R.id.tvGpsAccuracy);// 精度
-		//TextView tvGpsBearing = (TextView) findViewById(R.id.tvGpsBearing);// ベアリング
-		
-		// TextView tvGpsBundle = (TextView)
-		// findViewById(R.id.tvGpsBundle);//バンドル
-
-		//tvGpsLatitude.setText(String.valueOf(location.getLatitude()));
-		//tvGpsLongitude.setText(String.valueOf(location.getLongitude()));
-		//tvGpsAltitude.setText(String.valueOf(location.getAltitude()));
-		//tvGpsSpeed.setText(String.valueOf(location.getSpeed()));
-		//tvGpsAccuracy.setText(String.valueOf(location.getAccuracy()));
-		//tvGpsBearing.setText(String.valueOf(location.getBearing()));
-		// tvGpsBundle.setText( String.valueOf(location.getExtras()) );
-
-		// 時間変換
-		//String date = dataformat(location.getTime());
-
-		//tvGpsTime.setText(String.valueOf(location.getTime()));
-		//tvGpsTimeConvert.setText(date);
 		
 		((TextView) getWindow().getDecorView().findViewById(R.id.tvGpsTime)).setText( String.valueOf(location.getTime()) );// 時間
 		((TextView) getWindow().getDecorView().findViewById(R.id.tvGpsTimeConvert)).setText( dataformat(location.getTime()) );// 時間　変換値
@@ -519,21 +517,6 @@ public class MainActivity extends Activity implements LocationListener,
 		// TODO 自動生成されたメソッド・スタブ
 		String time = null;
 
-/*		TextView tvGPGGA01 = (TextView) findViewById(R.id.tvGPGGA01);
-		TextView tvGPGGA02 = (TextView) findViewById(R.id.tvGPGGA02);
-		TextView tvGPGGA03 = (TextView) findViewById(R.id.tvGPGGA03);
-		TextView tvGPGGA04 = (TextView) findViewById(R.id.tvGPGGA04);
-		TextView tvGPGGA05 = (TextView) findViewById(R.id.tvGPGGA05);
-		TextView tvGPGGA06 = (TextView) findViewById(R.id.tvGPGGA06);
-		TextView tvGPGGA07 = (TextView) findViewById(R.id.tvGPGGA07);
-		TextView tvGPGGA08 = (TextView) findViewById(R.id.tvGPGGA08);
-		TextView tvGPGGA09 = (TextView) findViewById(R.id.tvGPGGA09);
-		TextView tvGPGGA10 = (TextView) findViewById(R.id.tvGPGGA10);
-		TextView tvGPGGA11 = (TextView) findViewById(R.id.tvGPGGA11);
-		TextView tvGPGGA12 = (TextView) findViewById(R.id.tvGPGGA12);
-		TextView tvGPGGA13 = (TextView) findViewById(R.id.tvGPGGA13);
-		TextView tvGPGGA14 = (TextView) findViewById(R.id.tvGPGGA14);
-		TextView tvGPGGA15 = (TextView) findViewById(R.id.tvGPGGA15);*/
 
 		// Log.d("$GPGGA", nmeaList.get(1));
 		// final SimpleDateFormat formatter = new SimpleDateFormat("HHmmss.SS");
@@ -545,10 +528,6 @@ public class MainActivity extends Activity implements LocationListener,
 		} else {
 			time = "";
 		}
-
-		// 　緯度・経度方向
-		//String latitudeDirection = nmeaList.get(3) + "  [N:北緯,S:南緯]";
-		//String LatitudeDirection = nmeaList.get(5) + "  [E: 東経,W:西経]";
 
 		
 		((TextView) getWindow().getDecorView().findViewById(R.id.tvGPGGA01)).setText( nmeaList.get(1) + time );
@@ -568,22 +547,6 @@ public class MainActivity extends Activity implements LocationListener,
 		((TextView) getWindow().getDecorView().findViewById(R.id.tvGPGGA15)).setText( nmeaList.get(15) );
 
 		time = null;
-/*
-		tvGPGGA01.setText(nmeaList.get(1) + time);
-		tvGPGGA02.setText(nmeaList.get(2));
-		tvGPGGA03.setText(latitudeDirection);
-		tvGPGGA04.setText(nmeaList.get(4));
-		tvGPGGA05.setText(LatitudeDirection);
-		tvGPGGA06.setText(nmeaList.get(6));
-		tvGPGGA07.setText(nmeaList.get(7));
-		tvGPGGA08.setText(nmeaList.get(8));
-		tvGPGGA09.setText(nmeaList.get(9));
-		tvGPGGA10.setText(nmeaList.get(10));
-		tvGPGGA11.setText(nmeaList.get(11));
-		tvGPGGA12.setText(nmeaList.get(12));
-		tvGPGGA13.setText(nmeaList.get(13));
-		tvGPGGA14.setText(nmeaList.get(14));
-		tvGPGGA15.setText(nmeaList.get(15));*/
 
 	}
 
@@ -592,18 +555,6 @@ public class MainActivity extends Activity implements LocationListener,
 	 */
 	private void printOutGPRMC(ArrayList<String> nmeaList) {
 		// TODO 自動生成されたメソッド・スタブ
-/*		TextView tvGPRMC01 = (TextView) findViewById(R.id.tvGPRMC01);
-		TextView tvGPRMC02 = (TextView) findViewById(R.id.tvGPRMC02);// データ有効性
-		TextView tvGPRMC03 = (TextView) findViewById(R.id.tvGPRMC03);
-		TextView tvGPRMC04 = (TextView) findViewById(R.id.tvGPRMC04);
-		TextView tvGPRMC05 = (TextView) findViewById(R.id.tvGPRMC05);
-		TextView tvGPRMC06 = (TextView) findViewById(R.id.tvGPRMC06);
-		TextView tvGPRMC07 = (TextView) findViewById(R.id.tvGPRMC07);
-		TextView tvGPRMC08 = (TextView) findViewById(R.id.tvGPRMC08);
-		TextView tvGPRMC09 = (TextView) findViewById(R.id.tvGPRMC09);// 日付
-		TextView tvGPRMC10 = (TextView) findViewById(R.id.tvGPRMC10);
-		TextView tvGPRMC11 = (TextView) findViewById(R.id.tvGPRMC11);
-		TextView tvGPRMC12 = (TextView) findViewById(R.id.tvGPRMC12);*/
 
 		String date = null;
 
@@ -619,10 +570,6 @@ public class MainActivity extends Activity implements LocationListener,
 
 		// データ有効性
 		//String dataStatus = nmeaList.get(2) + "  [V:警告,A:有効]";
-
-		// 　緯度・経度方向
-		//String latitudeDirection = nmeaList.get(4) + "  [N:北緯,S:南緯]";
-		//String LatitudeDirection = nmeaList.get(6) + "  [E: 東経,W:西経]";
 		
 		((TextView) getWindow().getDecorView().findViewById(R.id.tvGPRMC01)).setText( nmeaList.get(1) );
 		((TextView) getWindow().getDecorView().findViewById(R.id.tvGPRMC02)).setText( nmeaList.get(2) + "  [V:警告,A:有効]" );
@@ -639,18 +586,6 @@ public class MainActivity extends Activity implements LocationListener,
 		
 		date = null;
 
-/*		tvGPRMC01.setText(nmeaList.get(1));
-		tvGPRMC02.setText(dataStatus);
-		tvGPRMC03.setText(nmeaList.get(3));
-		tvGPRMC04.setText(latitudeDirection);
-		tvGPRMC05.setText(nmeaList.get(5));
-		tvGPRMC06.setText(LatitudeDirection);
-		tvGPRMC07.setText(nmeaList.get(7));
-		tvGPRMC08.setText(nmeaList.get(8));
-		tvGPRMC09.setText(nmeaList.get(9) + date);
-		tvGPRMC10.setText(nmeaList.get(10));
-		tvGPRMC11.setText(nmeaList.get(11));
-		tvGPRMC12.setText(nmeaList.get(12));*/
 	}
 
 	/*
@@ -658,20 +593,6 @@ public class MainActivity extends Activity implements LocationListener,
 	 */
 	private void printOutGPVTG(ArrayList<String> nmeaList) {
 		// TODO 自動生成されたメソッド・スタブ
-/*		TextView tvGPVTG01 = (TextView) findViewById(R.id.tvGPVTG01);
-		TextView tvGPVTG02 = (TextView) findViewById(R.id.tvGPVTG02);
-		TextView tvGPVTG03 = (TextView) findViewById(R.id.tvGPVTG03);
-		TextView tvGPVTG04 = (TextView) findViewById(R.id.tvGPVTG04);
-		TextView tvGPVTG05 = (TextView) findViewById(R.id.tvGPVTG05);
-		TextView tvGPVTG06 = (TextView) findViewById(R.id.tvGPVTG06);
-		TextView tvGPVTG07 = (TextView) findViewById(R.id.tvGPVTG07);
-		TextView tvGPVTG08 = (TextView) findViewById(R.id.tvGPVTG08);
-		TextView tvGPVTG09 = (TextView) findViewById(R.id.tvGPVTG09);
-		TextView tvGPVTG10 = (TextView) findViewById(R.id.tvGPVTG10);*/
-
-		// 方向基準　真北
-		//String trueTrack = nmeaList.get(2) + "  [T:真北]";
-		//String magneticTrack = nmeaList.get(4) + "  [M:磁北]";
 		
 		((TextView) getWindow().getDecorView().findViewById(R.id.tvGPVTG01)).setText( nmeaList.get(1) );
 		((TextView) getWindow().getDecorView().findViewById(R.id.tvGPVTG02)).setText( nmeaList.get(2) + "  [T:真北]" );
@@ -684,16 +605,6 @@ public class MainActivity extends Activity implements LocationListener,
 		((TextView) getWindow().getDecorView().findViewById(R.id.tvGPVTG09)).setText( nmeaList.get(9) );
 		((TextView) getWindow().getDecorView().findViewById(R.id.tvGPVTG10)).setText( nmeaList.get(10) );
 
-/*		tvGPVTG01.setText(nmeaList.get(1));
-		tvGPVTG02.setText(trueTrack);
-		tvGPVTG03.setText(nmeaList.get(3));
-		tvGPVTG04.setText(magneticTrack);
-		tvGPVTG05.setText(nmeaList.get(5));
-		tvGPVTG06.setText(nmeaList.get(6));
-		tvGPVTG07.setText(nmeaList.get(7));
-		tvGPVTG08.setText(nmeaList.get(8));
-		tvGPVTG09.setText(nmeaList.get(9));
-		tvGPVTG10.setText(nmeaList.get(10));*/
 	}
 
 	/*
@@ -701,28 +612,6 @@ public class MainActivity extends Activity implements LocationListener,
 	 */
 	private void printOutGPGSA(ArrayList<String> nmeaList) {
 		// TODO 自動生成されたメソッド・スタブ
-/*		TextView tvPGGSA1 = (TextView) findViewById(R.id.tvPGGSA1);
-		TextView tvPGGSA2 = (TextView) findViewById(R.id.tvPGGSA2);
-		TextView tvPGGSA3 = (TextView) findViewById(R.id.tvPGGSA3);
-		TextView tvPGGSA4 = (TextView) findViewById(R.id.tvPGGSA4);
-		TextView tvPGGSA5 = (TextView) findViewById(R.id.tvPGGSA5);
-		TextView tvPGGSA6 = (TextView) findViewById(R.id.tvPGGSA6);
-		TextView tvPGGSA7 = (TextView) findViewById(R.id.tvPGGSA7);
-		TextView tvPGGSA8 = (TextView) findViewById(R.id.tvPGGSA8);
-		TextView tvPGGSA9 = (TextView) findViewById(R.id.tvPGGSA9);
-		TextView tvPGGSA10 = (TextView) findViewById(R.id.tvPGGSA10);
-		TextView tvPGGSA11 = (TextView) findViewById(R.id.tvPGGSA11);
-		TextView tvPGGSA12 = (TextView) findViewById(R.id.tvPGGSA12);
-		TextView tvPGGSA13 = (TextView) findViewById(R.id.tvPGGSA13);
-		TextView tvPGGSA14 = (TextView) findViewById(R.id.tvPGGSA14);
-		TextView tvPGGSA15 = (TextView) findViewById(R.id.tvPGGSA15);
-		TextView tvPGGSA16 = (TextView) findViewById(R.id.tvPGGSA16);
-		TextView tvPGGSA17 = (TextView) findViewById(R.id.tvPGGSA17);
-		TextView tvPGGSA18 = (TextView) findViewById(R.id.tvPGGSA18);
-*/
-		// 方向基準　真北
-		//String mode = nmeaList.get(1) + "  [M:手動,A: 自動]";
-		//String type = nmeaList.get(2) + "  [1:存在しない,2:2D特定,3:3D特定]";
 		
 		((TextView) getWindow().getDecorView().findViewById(R.id.tvPGGSA1)).setText( nmeaList.get(1) + "  [M:手動,A: 自動]" );
 		((TextView) getWindow().getDecorView().findViewById(R.id.tvPGGSA2)).setText( nmeaList.get(2) + "  [1:存在しない,2:2D特定,3:3D特定]" );
@@ -742,28 +631,6 @@ public class MainActivity extends Activity implements LocationListener,
 		((TextView) getWindow().getDecorView().findViewById(R.id.tvPGGSA16)).setText( nmeaList.get(16) );
 		((TextView) getWindow().getDecorView().findViewById(R.id.tvPGGSA17)).setText( nmeaList.get(17) );
 		((TextView) getWindow().getDecorView().findViewById(R.id.tvPGGSA18)).setText( nmeaList.get(18) );
-
-		
-
-
-/*		tvPGGSA1.setText(mode);
-		tvPGGSA2.setText(type);
-		tvPGGSA3.setText(nmeaList.get(3));
-		tvPGGSA4.setText(nmeaList.get(4));
-		tvPGGSA5.setText(nmeaList.get(5));
-		tvPGGSA6.setText(nmeaList.get(6));
-		tvPGGSA7.setText(nmeaList.get(7));
-		tvPGGSA8.setText(nmeaList.get(8));
-		tvPGGSA9.setText(nmeaList.get(9));
-		tvPGGSA10.setText(nmeaList.get(10));
-		tvPGGSA11.setText(nmeaList.get(11));
-		tvPGGSA12.setText(nmeaList.get(12));
-		tvPGGSA13.setText(nmeaList.get(13));
-		tvPGGSA14.setText(nmeaList.get(14));
-		tvPGGSA15.setText(nmeaList.get(15));
-		tvPGGSA16.setText(nmeaList.get(16));
-		tvPGGSA17.setText(nmeaList.get(17));
-		tvPGGSA18.setText(nmeaList.get(18));*/
 
 	}
 
@@ -821,45 +688,15 @@ public class MainActivity extends Activity implements LocationListener,
 			break;
 		case R.id.buttonLog:
 			Log.i("buttonTest", "ボタン２が押された");
-			// Intent intent2 = new Intent(this, Pref.class);
-			// startActivity(intent2);
-			
-			  //レイアウトの呼び出し
-			  LayoutInflater factory = LayoutInflater.from(this);
-			  final View inputView = factory.inflate(R.layout.log_dialog, null);
-			
-			 // ダイアログのオブジェクト(dlg) 生成
-			  AlertDialog.Builder dlg = new AlertDialog.Builder(this);
-			  //AlertDialog.Builder dlg = new AlertDialog.Builder(new ContextThemeWrapper(this, R.style.AlertDialogCustom));
-			 
-			  // ダイアログにタイトルを指定
-			  dlg.setTitle("タイトル");
-			 
-			  // ダイアログにメッセージを指定
-			  dlg.setMessage("ダイアログのメッセージ");
-			 
-			  
-			//カスタムレイアウトの表示
-			  dlg.setView(inputView);
-			  
-			  // アラートダイアログのポジティブボタンがクリックされた時に呼び出されるコールバックリスナーを登録します
-			  dlg.setPositiveButton("Start", new DialogInterface.OnClickListener() {
-			   @Override
-			   public void onClick(DialogInterface dialog, int which) {
-				   // ログ保存用サービス開始
-				   Intent intent = new Intent( contex, LogService.class );
-				   startService(intent);
-			   }
-			  });
 
-			  // アラートダイアログのネガティブボタンがクリックされた時に呼び出されるコールバックリスナーを登録します
-			  dlg.setNegativeButton("Cancel", null);
-			 
-			  // ダイアログを表示
-			  dlg.show();
+			Intent intent2 = new Intent(this, LogDialogActivity.class);
+			startActivity(intent2);
+			
 			break;
 
 		}
 
 	}
+	
+
 }
