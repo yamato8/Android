@@ -23,6 +23,7 @@ import android.os.Bundle;
 import android.os.Handler;
 import android.util.Log;
 import android.view.Menu;
+import android.view.MenuItem;
 import android.view.View;
 import android.widget.LinearLayout;
 import android.widget.TextView;
@@ -37,7 +38,7 @@ public class MainActivity extends Activity implements LocationListener,
 	private ReceiveLocation receiv;
 	private Context contex;
 	private int mode;
-	private Criteria criteria;
+	private LocationManager locationManagerNmea;
 
 	@Override
 	protected void onCreate(Bundle savedInstanceState) {
@@ -53,6 +54,8 @@ public class MainActivity extends Activity implements LocationListener,
 		contex = getApplicationContext();
 
 		locationManager = (LocationManager) getSystemService(LOCATION_SERVICE);//
+		
+		locationManagerNmea =  (LocationManager) getSystemService(LOCATION_SERVICE);//
 
 		String prefFileName = getApplicationContext().getFilesDir().getParentFile() + "/shared_prefs/" + getPackageName() + "_preferences.xml";// 設定ファイル
 		
@@ -77,41 +80,11 @@ public class MainActivity extends Activity implements LocationListener,
 		Log.d(TAG, "onResume 計測スタート");
 		
 		Initialize();//初期化する
-		
 
-		// 更新間隔の設定値を調べる
-		// long miniTime = myclass.timeSpan();
-		// float minDistance = myclass.minDistance();
-
-		// Log.d(TAG, "" + miniTime + "::" + minDistance );//
-
-		
-	// 　プロバイダの状態を確認する--------------------------------------------必要
+	// 　プロバイダの状態を確認する------------必要　移動
 		//providerCheck();
 		
-		
-/*		IntentFilter filter = new IntentFilter();
-		filter.addAction(ACTION_LOCATION_UPDATE);
-		
-		MainActivity aaa = MainActivity.this;
-		
-		receiv = new ReceiveLocation( new Handler() ,aaa);
-		registerReceiver(receiv, filter);
-		
-		 //PendingIntentの生成
-		//Intent intent = new Intent(this, ReceiveLocation.class);
-		Intent intent = new Intent();
-		//intent.setAction(ACTION_LOCATION_UPDATE);
-		
-		
-        PendingIntent pi = PendingIntent.getBroadcast(this, 0, intent, PendingIntent.FLAG_UPDATE_CURRENT);
 
-        //locationManager.requestLocationUpdates(1000, 0, criteria, pi);//aaxxx
-        
-        locationManager.requestLocationUpdates (LocationManager.NETWORK_PROVIDER, 1000, 0, pi);
-  */       
-        //locationManager.requestLocationUpdates (LocationManager.GPS_PROVIDER, 1000, 0,this);//
-        //locationManager.addNmeaListener(this);
 	}
 
 
@@ -124,12 +97,36 @@ public class MainActivity extends Activity implements LocationListener,
 			locationManager.removeUpdates(this);
 			locationManager.removeNmeaListener(this);
 		}
+		
+		if (locationManagerNmea != null) {
+			locationManagerNmea.removeUpdates(this);
+			locationManagerNmea.removeNmeaListener(this);
+		}
+		
+		if( mode == 1){
+			unregisterReceiver(receiv);
+		}
 	}
 
 	@Override
 	public boolean onCreateOptionsMenu(Menu menu) {
 		// Inflate the menu; this adds items to the action bar if it is present.
 		getMenuInflater().inflate(R.menu.main, menu);
+		return true;
+	}
+	// オプションメニューアイテムが選択された時に呼び出されます
+    @Override
+	public boolean onOptionsItemSelected(MenuItem item) {
+
+		switch (item.getItemId()) {
+		case R.id.item1:
+			finish();
+			break;
+
+		default:
+			break;
+		}
+		
 		return true;
 	}
 
@@ -170,7 +167,7 @@ public class MainActivity extends Activity implements LocationListener,
 	public void onNmeaReceived(long timestamp, String nmea) {
 		// TODO 自動生成されたメソッド・スタブ
 
-		Log.d("", nmea);//
+		//Log.d("", nmea);//
 		nmea = nmea.trim();
 
 		// 区切り文字で分解
@@ -232,54 +229,126 @@ public class MainActivity extends Activity implements LocationListener,
 		
 		// プロバイダ取得要件を利用するか調べる
 		SharedPreferences pref  = getSharedPreferences("com.example.simpleloggergps_preferences", MODE_PRIVATE);
-		boolean providerSelect = pref.getBoolean("providerSelect", false);	
+		boolean providerSelect = pref.getBoolean("providerSelect", false);
+
+		long miniTimeLiong = Long.parseLong( pref.getString("minTime", "999") );
+		float  miniDistanceFloat = Float.parseFloat( pref.getString("minDistance", "999") );
+		Log.i(TAG, "更新間隔" + miniTimeLiong + "::" + miniDistanceFloat );
+
+
+		LinearLayout lineLayoutGps = (LinearLayout) findViewById(R.id.lineLayoutGps);
+		LinearLayout lineLayoutNetwork = (LinearLayout) findViewById(R.id.lineLayoutNetwork);
 
 		if (providerSelect) {
+			Log.i(TAG, "プロバイダ選択要件を使う場合");
 			//プロバイダ取得要件を使う場合
 			mode = 1;
 
 			// 位置取得要件を読み込む　Criteria　
-			criteria = readPrefCriteria( new Criteria() );
-			mode1();
+			Criteria criteria = readPrefCriteria();
+			
+			String provider = locationManager.getBestProvider(criteria, true);
+			
+			TextView tvPloviderList = (TextView) findViewById(R.id.tvPloviderList);
+			if( provider.equals("network") ){
+				Log.i(TAG, "ベストプロバイダ::network" );
+				tvPloviderList.setText("network プロバイダが選択されました。");
+				
+				//gpsプロバイダ　表示部分を非表示にする
+				lineLayoutGps.setVisibility(View.GONE);  
+
+
+			}else if(  provider.equals("gps")  ){
+				Log.i(TAG, "ベストプロバイダ::gps" );
+				tvPloviderList.setText("gps プロバイダが選択されました。");
+				lineLayoutNetwork.setVisibility(View.GONE);
+			}
+			
+			mode1( criteria, miniTimeLiong, miniDistanceFloat );
 		} else {
+			Log.i(TAG, "プロバイダ選択要件を使わない場合");
+			lineLayoutNetwork.setVisibility(View.VISIBLE);
+			lineLayoutGps.setVisibility(View.VISIBLE);  
+
 			mode = 0;
-			providerCheck();
+			providerCheck( miniTimeLiong, miniDistanceFloat);
 		}
 		
 	}
-	private void mode1() {
+	
+	/*
+	 * 概要：プロバイダ選択要件を使用する場合
+	 */
+	private void mode1(Criteria criteria, long miniTimeLiong, float miniDistanceFloat) {
 		// TODO 自動生成されたメソッド・スタブ
 		IntentFilter filter = new IntentFilter();
 		filter.addAction(ACTION_LOCATION_UPDATE);
 		
-		MainActivity aaa = MainActivity.this;
+		MainActivity mainActivity = MainActivity.this;
 		
-		receiv = new ReceiveLocation( new Handler() ,aaa);
+		receiv = new ReceiveLocation( new Handler() ,mainActivity);
 		registerReceiver(receiv, filter);
 		
 		 //PendingIntentの生成
 		//Intent intent = new Intent(this, ReceiveLocation.class);
 		Intent intent = new Intent();
-		//intent.setAction(ACTION_LOCATION_UPDATE);
-		
+		intent.setAction(ACTION_LOCATION_UPDATE);
 		
         PendingIntent pi = PendingIntent.getBroadcast(this, 0, intent, PendingIntent.FLAG_UPDATE_CURRENT);
  
-        //locationManager.requestLocationUpdates(1000, 0, criteria, pi);//aaxxx
+        locationManager.requestLocationUpdates(miniTimeLiong, miniDistanceFloat, criteria, pi);//
         
         //locationManager.requestLocationUpdates (LocationManager.NETWORK_PROVIDER, 1000, 0, pi);
-        
         //locationManager.requestLocationUpdates (LocationManager.GPS_PROVIDER, 1000, 0, pi);
-        locationManager.addNmeaListener(this);
+        //locationManager.addNmeaListener(this);
+        
+        locationManagerNmea.requestLocationUpdates (LocationManager.GPS_PROVIDER, miniTimeLiong, miniDistanceFloat, this);
+        locationManagerNmea.addNmeaListener(this);//
 	}
 
+	/*
+	 * 概要：プロバイダの状態をチェックする 引数：ロケーションマネージャー
+	 */
+	private void providerCheck(long miniTimeLiong, float miniDistanceFloat) {
+		// TODO 自動生成されたメソッド・スタブ
+		
 
+		String providerStatus = "";
+
+		List<String> providers = locationManager.getAllProviders();
+		for (String provider : providers) {
+			if (locationManager.isProviderEnabled(provider)) {
+				//Log.i("getAllProviders", provider + "　は有効");
+				providerStatus += provider + " : 有効\n";
+				//locationManager.requestLocationUpdates(provider, 1000, 0, this);
+				if ( provider.equals("gps") ){
+					locationManager.requestLocationUpdates(LocationManager.GPS_PROVIDER, miniTimeLiong, miniDistanceFloat, this);
+					locationManager.addNmeaListener(this);
+				}else if (  provider.equals("network") ){
+					locationManager.requestLocationUpdates(LocationManager.NETWORK_PROVIDER, miniTimeLiong, miniDistanceFloat, this);
+				}
+			} else {
+				// Log.i("getAllProviders", provider + "　無効");
+				providerStatus += provider + " : 無効\n";
+				// state = "無効";
+				if ( provider.equals("gps") ){
+					// GPS プロバイダが無効の場合 nmea を取得できないと表示する。
+				}
+			}
+		}
+		
+		//TextView tvGpsState = (TextView) findViewById(R.id.tvPloviderList);//
+		((TextView) getWindow().getDecorView().findViewById(R.id.tvPloviderList)).setText(providerStatus);
+		//tvGpsState.setText(providerStatus);
+		providerStatus = null;
+	}
 
 	/*
 	 * 概要：設定値を調べる
 	 */
-	private Criteria readPrefCriteria(Criteria criteria) {
+	private Criteria readPrefCriteria() {
 		// TODO 自動生成されたメソッド・スタブ
+		Criteria criteria = new Criteria();
 		
 		SharedPreferences pref  = getSharedPreferences("com.example.simpleloggergps_preferences", MODE_PRIVATE);
 		
@@ -367,42 +436,7 @@ public class MainActivity extends Activity implements LocationListener,
 		return getSharedPreferences(getPackageName() + "_preferences", Context.MODE_PRIVATE).edit();
 	}
 
-	/*
-	 * 概要：プロバイダの状態をチェックする 引数：ロケーションマネージャー
-	 */
-	private void providerCheck() {
-		// TODO 自動生成されたメソッド・スタブ
-		
 
-		String providerStatus = "";
-
-		List<String> providers = locationManager.getAllProviders();
-		for (String provider : providers) {
-			if (locationManager.isProviderEnabled(provider)) {
-				//Log.i("getAllProviders", provider + "　は有効");
-				providerStatus += provider + " : 有効\n";
-				//locationManager.requestLocationUpdates(provider, 1000, 0, this);
-				if ( provider.equals("gps") ){
-					locationManager.requestLocationUpdates(LocationManager.GPS_PROVIDER, 1000, 0, this);
-					locationManager.addNmeaListener(this);
-				}else if (  provider.equals("network") ){
-					locationManager.requestLocationUpdates(LocationManager.NETWORK_PROVIDER, 1000, 0, this);
-				}
-			} else {
-				// Log.i("getAllProviders", provider + "　無効");
-				providerStatus += provider + " : 無効\n";
-				// state = "無効";
-				if ( provider.equals("gps") ){
-					// GPS プロバイダが無効の場合 nmea を取得できないと表示する。
-				}
-			}
-		}
-		
-		//TextView tvGpsState = (TextView) findViewById(R.id.tvPloviderList);//
-		((TextView) getWindow().getDecorView().findViewById(R.id.tvPloviderList)).setText(providerStatus);
-		//tvGpsState.setText(providerStatus);
-		providerStatus = null;
-	}
 
 	/*
 	 * 概要：ネットワークプロバイダの値を表示する 引数：Location
@@ -446,7 +480,7 @@ public class MainActivity extends Activity implements LocationListener,
 	private void printOutGPGSV(String nmea, long timestamp,	ArrayList<String> nmeaList) {
 		// TODO 自動生成されたメソッド・スタブ
 
-		Log.i("", "ddddddddddddddddddddddddddd");
+		//Log.i("", "ddddddddddddddddddddddddddd");
 		
 		// 時間変換
 		//String date = dataformat(timestamp);
@@ -637,7 +671,7 @@ public class MainActivity extends Activity implements LocationListener,
 	/*
 	 * UTC 時間を変換
 	 */
-	private String dataformat(long utcTime) {
+	static String dataformat(long utcTime) {
 		// TODO 自動生成されたメソッド・スタブ
 		//SimpleDateFormat df = new SimpleDateFormat("yyyy/MM/dd HH:mm:ss.SSS",Locale.JAPAN);
 

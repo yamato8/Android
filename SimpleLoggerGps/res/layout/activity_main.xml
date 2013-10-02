@@ -28,7 +28,7 @@
             <include
                 android:layout_width="match_parent"
                 android:layout_height="wrap_content"
-                layout="@layout/gpasv" />
+                layout="@layout/gpgsv" />
 
             <include
                 android:layout_width="match_parent"
@@ -75,6 +75,14 @@
             android:layout_weight="1"
             android:onClick="ButtonOnClick"
             android:text="@string/buttonLog" />
+
+        <Button
+            android:id="@+id/button1"
+            style="?android:attr/buttonStyleSmall"
+            android:layout_width="0dp"
+            android:layout_height="wrap_content"
+            android:layout_weight="1"
+            android:text="@string/help" />
 
     </LinearLayout>
 

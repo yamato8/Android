@@ -87,5 +87,6 @@
     <string name="diaLogSpan">間　　隔</string>
     <string name="diaLogTime">記録時間</string>
     <string name="diaLogMinutu">分</string>
+    <string name="help">ヘルプ</string>
 
 </resources>
