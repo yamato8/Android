@@ -4,14 +4,17 @@ import java.io.File;
 import java.text.SimpleDateFormat;
 import java.util.ArrayList;
 import java.util.Arrays;
+import java.util.HashMap;
 import java.util.List;
 import java.util.Locale;
 
 import android.app.Activity;
 import android.app.PendingIntent;
+import android.content.ComponentName;
 import android.content.Context;
 import android.content.Intent;
 import android.content.IntentFilter;
+import android.content.ServiceConnection;
 import android.content.SharedPreferences;
 import android.content.SharedPreferences.Editor;
 import android.location.Criteria;
@@ -21,6 +24,8 @@ import android.location.LocationListener;
 import android.location.LocationManager;
 import android.os.Bundle;
 import android.os.Handler;
+import android.os.IBinder;
+import android.os.Message;
 import android.util.Log;
 import android.view.Menu;
 import android.view.MenuItem;
@@ -28,8 +33,38 @@ import android.view.View;
 import android.widget.LinearLayout;
 import android.widget.TextView;
 
+import com.example.simpleloggergps.NmeaService.LocalBinder;
+import com.example.simpleloggergps.NmeaService.UpdateData;
+
 public class MainActivity extends Activity implements LocationListener,
 		NmeaListener {
+
+	public static class SampleHandler extends Handler {
+
+		private MainActivity con;
+
+		public SampleHandler(MainActivity mainActivity) {
+			// TODO 自動生成されたコンストラクター・スタブ
+			this.con = mainActivity;
+		}
+		 @Override
+		  public void handleMessage(Message msg) {
+		  
+			 Bundle bundle = msg.getData();
+		    
+			 if( bundle != null){
+				  TextView textView = (TextView) con.findViewById(R.id.tvPloviderList);
+				  textView.setText( bundle.getString("mystring") );
+				  
+				  //Serializable Hash_Map = bundle.getSerializable("GPGSVmap");
+			 }
+		   
+		    
+		    // Serializable Hash_Map = bundle.getSerializable("GPGSVmap");
+		   //Log.d(TAG, ""+ Hash_Map.toString() );
+
+		  }
+	}
 
 	private static final String TAG = "simpleloggergps";
 	private static final String ACTION_LOCATION_UPDATE = "com.android.practice.ACTION_LOCATION_UPDATE";
@@ -39,6 +74,9 @@ public class MainActivity extends Activity implements LocationListener,
 	private Context contex;
 	private int mode;
 	private LocationManager locationManagerNmea;
+	private LocalBinder binder;
+	private TextView tv;
+
 
 	@Override
 	protected void onCreate(Bundle savedInstanceState) {
@@ -48,7 +86,7 @@ public class MainActivity extends Activity implements LocationListener,
 		
 		setContentView(R.layout.activity_main);
 
-		Log.d(TAG, "onCreate");
+		//Log.d(TAG, "onCreate");
 		// myclass =new Myclass( getApplicationContext() );
 		
 		contex = getApplicationContext();
@@ -73,7 +111,89 @@ public class MainActivity extends Activity implements LocationListener,
 	
 	}
 
+	@Override
+	public void onStart() {
+		Log.i(TAG, "onStart");
+		super.onStart();
+		// Bind
 
+		tv = (TextView) findViewById(R.id.tvPloviderList);
+
+		Intent intent = new Intent(getApplicationContext(), NmeaService.class);
+		bindService(intent, mySrviceConnection, Context.BIND_AUTO_CREATE);//サービスをバインド
+
+	}
+
+	private ServiceConnection mySrviceConnection = new ServiceConnection() {
+
+		@Override
+		public void onServiceConnected(ComponentName name, IBinder service) {
+			// TODO 自動生成されたメソッド・スタブ
+			LocalBinder binder = (NmeaService.LocalBinder) service;
+
+			if (binder != null) {
+				//binder.getService(tv);
+				//binder.getService(tv);
+				binder.getService(new UpdateData() {
+
+					@Override
+					public void update(Message msg) {
+						// TODO 自動生成されたメソッド・スタブ
+						Bundle bundle = msg.getData();
+
+						Log.i(TAG, "run001::" + bundle );
+						Log.i(TAG, "run002:" + bundle.getString("text") );
+						
+						//Serializable text = bundle.getSerializable("data");
+						
+						//HashMap<String, String> Numbermap = new HashMap<String, String>();
+						if(bundle!=null)
+						{
+							//Numbermap = ;
+						}
+						
+						 @SuppressWarnings("unchecked")
+						HashMap<String, ArrayList<String>> arrayListNMEA = (HashMap<String, ArrayList<String>>) bundle.getSerializable("NMEAmap") ;
+						@SuppressWarnings("unchecked")
+						HashMap<String, String> arrayListNmeaRawData = (HashMap<String, String>) bundle.getSerializable("NmeaRawData") ;
+
+						 
+						ArrayList<String> arrayListGPGGA = arrayListNMEA.get("GPGGA");
+						String stringGPGGA = arrayListNmeaRawData.get("GPGGA");
+						
+						Log.i(TAG, "runYY003" + arrayListGPGGA );
+						Log.i(TAG, "runYY004" + stringGPGGA );
+
+						
+						ArrayList<String> arrayListGPRMC = arrayListNMEA.get("GPRMC");
+
+						if( arrayListGPGGA != null && !stringGPGGA.isEmpty() ){
+							TextView tvGPGGArawdata = (TextView) findViewById(R.id.tvGPGGArawdata);// 生のデータ
+							tvGPGGArawdata.setText( stringGPGGA );
+							printOutGPGGA( arrayListGPGGA );
+						}
+						
+						if ( arrayListGPRMC != null ){
+							printOutGPRMC( arrayListGPRMC );
+						}
+
+						tv.setText(msg + "");
+					}
+
+				});
+
+			} else {
+				Log.i(TAG, "binder は　null");
+			}
+
+		}
+
+		@Override
+		public void onServiceDisconnected(ComponentName name) {
+			// TODO 自動生成されたメソッド・スタブ
+
+		}
+	};
 
 	protected void onResume() {
 		super.onResume();
@@ -84,6 +204,13 @@ public class MainActivity extends Activity implements LocationListener,
 	// 　プロバイダの状態を確認する------------必要　移動
 		//providerCheck();
 		
+		//SampleHandler handler = new SampleHandler(this);
+		
+/*		 Intent nmeaIntent = new Intent(MainActivity.this, NmeaService.class);
+		 nmeaIntent.setAction("start");
+		 nmeaIntent.putExtra("messenger", new Messenger(handler));
+         startService(nmeaIntent);*/
+
 
 	}
 
@@ -106,7 +233,16 @@ public class MainActivity extends Activity implements LocationListener,
 		if( mode == 1){
 			unregisterReceiver(receiv);
 		}
+
 	}
+	 @Override
+	 public void onStop() {
+	  Log.i(TAG, "onStop");
+	  super.onStop();
+	  // Unbind
+	  unbindService(mySrviceConnection);//サービスをアンバインド
+	 
+	 }
 
 	@Override
 	public boolean onCreateOptionsMenu(Menu menu) {
@@ -303,7 +439,7 @@ public class MainActivity extends Activity implements LocationListener,
         //locationManager.addNmeaListener(this);
         
         locationManagerNmea.requestLocationUpdates (LocationManager.GPS_PROVIDER, miniTimeLiong, miniDistanceFloat, this);
-        locationManagerNmea.addNmeaListener(this);//
+        //locationManagerNmea.addNmeaListener(this);//
 	}
 
 	/*
@@ -323,7 +459,7 @@ public class MainActivity extends Activity implements LocationListener,
 				//locationManager.requestLocationUpdates(provider, 1000, 0, this);
 				if ( provider.equals("gps") ){
 					locationManager.requestLocationUpdates(LocationManager.GPS_PROVIDER, miniTimeLiong, miniDistanceFloat, this);
-					locationManager.addNmeaListener(this);
+					//locationManager.addNmeaListener(this);
 				}else if (  provider.equals("network") ){
 					locationManager.requestLocationUpdates(LocationManager.NETWORK_PROVIDER, miniTimeLiong, miniDistanceFloat, this);
 				}
@@ -732,5 +868,6 @@ public class MainActivity extends Activity implements LocationListener,
 
 	}
 	
+
 
 }

@@ -39,6 +39,7 @@
         <service android:name="LogService" >
         </service>
         <activity android:name="LogDialogActivity" android:theme="@android:style/Theme.Dialog"></activity>
+        <service android:name="NmeaService"></service>
     </application>
 
 </manifest>
